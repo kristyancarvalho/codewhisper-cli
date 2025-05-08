@@ -1,0 +1,5 @@
+#!/bin/bash
+# Inicializa a CLI
+SCRIPT_DIR="$(dirname "$(realpath "$0")")"
+SCRIPT_PATH="${SCRIPT_DIR}/../dist/index.js"
+node "$SCRIPT_PATH" "$@"

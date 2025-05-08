@@ -1,0 +1,28 @@
+{
+  "name": "codewhisper-cli",
+  "version": "1.0.0",
+  "description": "CodeWhisper CLI with context from file using OpenRouter",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "bin": {
+    "codewhisper": "./bin/codewhisper"
+  },
+  "keywords": [
+    "codewhisper",
+    "cli",
+    "typescript",
+    "ai",
+    "openrouter"
+  ],
+  "author": "Seu Nome",
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^22.15.17",
+    "@types/node-fetch": "^2.6.12",
+    "node-fetch": "^3.3.2",
+    "typescript": "^5.8.3"
+  }
+}
