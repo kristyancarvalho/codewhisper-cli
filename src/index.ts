@@ -1,122 +1,111 @@
-import fetch, { Response } from 'node-fetch';
-import { readFileContent } from './fileUtils';
+import { readFileContent } from './utils/fileUtils';
+import { ConversationDB } from './utils/dbUtils';
+import { sendToOpenRouter } from './utils/apiUtils';
+import { parseCommandLineArgs, validateArgs, printUsage, DEFAULT_MODEL } from './utils/cliUtils';
+import readline from 'readline';
+import { v4 as uuidv4 } from 'uuid';
 
-const API_KEY = process.env.OPENROUTER_API_KEY;
-const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const DEFAULT_MODEL = 'meta-llama/llama-4-maverick:free';
+const runInteractiveMode = async (model: string) => {
+  const sessionId = uuidv4();
+  const db = new ConversationDB(sessionId);
+  await db.initialize();
+  
+  console.log("Iniciando modo de chat. Digite 'sair' para finalizar.");
+  console.log("Contexto de código será carregado apenas no início da conversa.");
+  
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
 
-interface ApiResponse {
-  choices?: { message: { content: string } }[];
-  error?: { message: string };
-}
-
-interface ApiError {
-  error: { message: string };
-}
-
-interface CommandLineArgs {
-  filePaths?: string[];
-  prompt?: string;
-  model: string;
-}
-
-const parseCommandLineArgs = (args: string[]): CommandLineArgs => {
-  const parsedArgs: CommandLineArgs = { model: DEFAULT_MODEL };
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    switch (arg) {
-      case '-F':
-      case '--file-path':
-        if (i + 1 >= args.length) {
-          throw new Error(`Argumento ${arg} requer um valor`);
+  const askForFiles = () => {
+    return new Promise<string[]>((resolve) => {
+      rl.question('Digite os caminhos dos arquivos de código (separados por vírgula), ou pressione Enter para pular: ', async (answer) => {
+        if (answer.trim() === '') {
+          resolve([]);
+        } else {
+          const filePaths = answer.split(',').map(path => path.trim());
+          resolve(filePaths);
         }
-        if (!parsedArgs.filePaths) {
-          parsedArgs.filePaths = [];
-        }
-        parsedArgs.filePaths.push(args[i + 1]);
-        i++;
-        break;
-      case '-P':
-      case '--prompt':
-        if (i + 1 >= args.length) {
-          throw new Error(`Argumento ${arg} requer um valor`);
-        }
-        parsedArgs.prompt = args[i + 1]?.replace(/^"|"$/g, '');
-        i++;
-        break;
-      case '-M':
-      case '--model':
-        if (i + 1 >= args.length) {
-          throw new Error(`Argumento ${arg} requer um valor`);
-        }
-        parsedArgs.model = args[i + 1];
-        i++;
-        break;
-      default:
-        throw new Error(`Argumento inválido: ${arg}`);
-    }
-  }
-
-  return parsedArgs;
-};
-
-const sendToOpenRouter = async (context: string, prompt: string, model: string): Promise<ApiResponse> => {
-  if (!API_KEY) {
-    throw new Error('A variável de ambiente OPENROUTER_API_KEY não está definida.');
-  }
-
-  const headers = {
-    'Authorization': `Bearer ${API_KEY}`,
-    'Content-Type': 'application/json',
-  };
-
-  const data = {
-    model,
-    messages: [
-      { role: 'system', content: 'You are a programming assistant that uses the provided code as context to answer questions.' },
-      { role: 'user', content: `Context:\n\`\`\`\n${context}\n\`\`\`\n\nQuestion: ${prompt}` },
-    ],
-  };
-
-  try {
-    const response: Response = await fetch(API_URL, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data),
+      });
     });
+  };
 
-    if (!response.ok) {
-      const errorBody = await response.json() as ApiError;
-      throw new Error(`Erro na requisição para a API (${response.status}): ${errorBody?.error?.message || response.statusText}`);
+  const askQuestion = () => {
+    return new Promise<string>((resolve) => {
+      rl.question('\nSua pergunta (ou "sair" para encerrar): ', (answer) => {
+        resolve(answer);
+      });
+    });
+  };
+
+  const filePaths = await askForFiles();
+  let codeContext = '';
+  
+  if (filePaths.length > 0) {
+    try {
+      codeContext = await readFileContent(filePaths);
+      await db.addMessage('system', `Código de contexto:\n\`\`\`\n${codeContext}\n\`\`\``);
+      console.log(`Código carregado de ${filePaths.length} arquivo(s).`);
+    } catch (error: any) {
+      console.error(`Erro ao carregar arquivos: ${error.message}`);
+      await db.close();
+      rl.close();
+      return;
     }
-
-    return await response.json() as ApiResponse;
-  } catch (error: any) {
-    throw new Error(`Erro na requisição para a API: ${error.message}`);
   }
-};
-
-const validateArgs = (args: CommandLineArgs) => {
-  if (!args.filePaths || args.filePaths.length === 0 || !args.prompt) {
-    throw new Error('Os argumentos --file-path e --prompt são obrigatórios. --file-path pode ser repetido para múltiplos arquivos.');
+  
+  await db.addMessage('system', 'You are a programming assistant that helps with coding questions and maintains conversation context.');
+  
+  let isRunning = true;
+  while (isRunning) {
+    const question = await askQuestion();
+    
+    if (question.toLowerCase() === 'sair') {
+      isRunning = false;
+      continue;
+    }
+    
+    await db.addMessage('user', question);
+    
+    try {
+      const history = await db.getConversationHistory();
+      const messages = history.map(msg => ({ role: msg.role, content: msg.content }));
+      
+      const apiResponse = await sendToOpenRouter(messages, model);
+      
+      if (apiResponse.choices && apiResponse.choices.length > 0) {
+        const response = apiResponse.choices[0].message.content;
+        console.log('\nAssistente:');
+        console.log(response);
+        await db.addMessage('assistant', response);
+      } else if (apiResponse.error) {
+        console.error('\nErro da API:');
+        console.error(apiResponse.error.message);
+      } else {
+        console.log('Não foi possível obter uma resposta da IA.');
+      }
+    } catch (error: any) {
+      console.error(`Erro: ${error.message}`);
+    }
   }
+  
+  await db.close();
+  rl.close();
+  console.log('Chat encerrado.');
 };
 
-const printUsage = () => {
-  console.log(`Uso: codewhisper -F <caminho do arquivo> [-F <outro caminho>] -P "<prompt do usuário>" [-M <nome do modelo>]`);
-  console.log(`   ou: codewhisper --file-path <caminho do arquivo> [--file-path <outro caminho>] --prompt "<prompt do usuário>" [--model <nome do modelo>]`);
-};
-
-const main = async () => {
+const runSinglePromptMode = async (filePaths: string[], prompt: string, model: string) => {
   try {
-    const args = process.argv.slice(2);
-    const parsedArgs = parseCommandLineArgs(args);
-    validateArgs(parsedArgs);
-
-    const codeContext = await readFileContent(parsedArgs.filePaths!);
-    const apiResponse = await sendToOpenRouter(codeContext, parsedArgs.prompt!, parsedArgs.model);
-
+    const codeContext = await readFileContent(filePaths);
+    
+    const messages = [
+      { role: 'system' as const, content: 'You are a programming assistant that uses the provided code as context to answer questions.' },
+      { role: 'user' as const, content: `Context:\n\`\`\`\n${codeContext}\n\`\`\`\n\nQuestion: ${prompt}` }
+    ];
+    
+    const apiResponse = await sendToOpenRouter(messages, model);
+    
     if (apiResponse.choices) {
       console.log('\nResposta da IA:');
       console.log(apiResponse.choices[0].message.content);
@@ -125,6 +114,24 @@ const main = async () => {
       console.error(apiResponse.error.message);
     } else {
       console.log('Não foi possível obter uma resposta da IA.');
+    }
+  } catch (error: any) {
+    console.error(error.message);
+    printUsage();
+    process.exit(1);
+  }
+};
+
+const main = async () => {
+  try {
+    const args = process.argv.slice(2);
+    const parsedArgs = parseCommandLineArgs(args);
+    
+    if (parsedArgs.interactive) {
+      await runInteractiveMode(parsedArgs.model || DEFAULT_MODEL);
+    } else {
+      validateArgs(parsedArgs);
+      await runSinglePromptMode(parsedArgs.filePaths!, parsedArgs.prompt!, parsedArgs.model);
     }
   } catch (error: any) {
     console.error(error.message);
