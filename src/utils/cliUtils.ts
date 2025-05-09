@@ -58,6 +58,11 @@ export const parseCommandLineArgs = (args: string[]): CommandLineArgs => {
       case '--auto-discover':
         parsedArgs.autoDiscover = true;
         break;
+      case '-H':
+      case '--help':
+        printUsage();
+        process.exit(0);
+        break;
       case '--max-files':
         if (i + 1 >= args.length) {
           throw new Error(`Argumento ${arg} requer um valor`);
@@ -100,7 +105,7 @@ export const printUsage = () => {
   console.log(`Uso: codewhisper [opções]`);
   console.log(`Opções:`);
   console.log(`  -F, --file-path <arquivo>   Especifica um arquivo para análise (pode ser usado múltiplas vezes)`);
-  console.log(`  -P, --prompt "<prompt>"      Pergunta ou instrução para o assistente`);
+  console.log(`  -P, --prompt "<prompt>"     Pergunta ou instrução para o assistente`);
   console.log(`  -M, --model <modelo>        Modelo de IA a ser usado (default: ${DEFAULT_MODEL})`);
   console.log(`  -I, --interactive           Ativa o modo interativo de chat`);
   console.log(`  -A, --auto-discover         Descobre automaticamente arquivos relevantes com base no prompt`);
