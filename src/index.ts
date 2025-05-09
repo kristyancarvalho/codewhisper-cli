@@ -1,6 +1,5 @@
 import fetch, { Response } from 'node-fetch';
-import fs from 'fs/promises';
-import path from 'path';
+import { readFileContent } from './fileUtils';
 
 const API_KEY = process.env.OPENROUTER_API_KEY;
 const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
@@ -60,17 +59,6 @@ const parseCommandLineArgs = (args: string[]): CommandLineArgs => {
   }
 
   return parsedArgs;
-};
-
-const readFileContent = async (filePaths: string[]): Promise<string> => {
-  try {
-    const contents = await Promise.all(filePaths.map(async (filePath) => {
-      return await fs.readFile(path.resolve(filePath), 'utf-8');
-    }));
-    return contents.join('\n\n');
-  } catch (error: any) {
-    throw new Error(`Erro ao ler os arquivos: ${error.message}`);
-  }
 };
 
 const sendToOpenRouter = async (context: string, prompt: string, model: string): Promise<ApiResponse> => {
