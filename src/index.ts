@@ -1,65 +1,87 @@
 import { readFileContent } from './utils/fileUtils';
 import { ConversationDB } from './utils/dbUtils';
 import { sendToOpenRouter } from './utils/apiUtils';
-import { parseCommandLineArgs, validateArgs, printUsage, DEFAULT_MODEL } from './utils/cliUtils';
+import { parseCommandLineArgs, validateArgs, printUsage } from './utils/cliUtils';
 import readline from 'readline';
 import { v4 as uuidv4 } from 'uuid';
 
-const runInteractiveMode = async (model: string) => {
+const runInteractiveMode = async (model: string, initialFilePaths?: string[], initialPrompt?: string) => {
   const sessionId = uuidv4();
   const db = new ConversationDB(sessionId);
   await db.initialize();
-  
-  console.log("Iniciando modo de chat. Digite 'sair' para finalizar.");
-  console.log("Contexto de código será carregado apenas no início da conversa.");
   
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
   });
 
-  const askForFiles = () => {
-    return new Promise<string[]>((resolve) => {
-      rl.question('Digite os caminhos dos arquivos de código (separados por vírgula), ou pressione Enter para pular: ', async (answer) => {
-        if (answer.trim() === '') {
-          resolve([]);
-        } else {
-          const filePaths = answer.split(',').map(path => path.trim());
-          resolve(filePaths);
-        }
-      });
-    });
-  };
+  await db.addMessage('system', 'You are a programming assistant that helps with coding questions and maintains conversation context.');
 
-  const askQuestion = () => {
-    return new Promise<string>((resolve) => {
-      rl.question('\nSua pergunta (ou "sair" para encerrar): ', (answer) => {
-        resolve(answer);
-      });
-    });
-  };
-
-  const filePaths = await askForFiles();
-  let codeContext = '';
-  
-  if (filePaths.length > 0) {
+  if (initialFilePaths && initialFilePaths.length > 0) {
     try {
-      codeContext = await readFileContent(filePaths);
+      const codeContext = await readFileContent(initialFilePaths);
       await db.addMessage('system', `Código de contexto:\n\`\`\`\n${codeContext}\n\`\`\``);
-      console.log(`Código carregado de ${filePaths.length} arquivo(s).`);
     } catch (error: any) {
       console.error(`Erro ao carregar arquivos: ${error.message}`);
       await db.close();
       rl.close();
       return;
     }
+  } else {
+    const filePaths = await new Promise<string[]>((resolve) => {
+      rl.question('Digite os caminhos dos arquivos de código (separados por vírgula), ou pressione Enter para pular: ', async (answer) => {
+        if (answer.trim() === '') {
+          resolve([]);
+        } else {
+          resolve(answer.split(',').map(path => path.trim()));
+        }
+      });
+    });
+    
+    if (filePaths.length > 0) {
+      try {
+        const codeContext = await readFileContent(filePaths);
+        await db.addMessage('system', `Código de contexto:\n\`\`\`\n${codeContext}\n\`\`\``);
+      } catch (error: any) {
+        console.error(`Erro ao carregar arquivos: ${error.message}`);
+        await db.close();
+        rl.close();
+        return;
+      }
+    }
   }
-  
-  await db.addMessage('system', 'You are a programming assistant that helps with coding questions and maintains conversation context.');
+
+  if (initialPrompt) {
+    await db.addMessage('user', initialPrompt);
+    
+    try {
+      const history = await db.getConversationHistory();
+      const messages = history.map(msg => ({ role: msg.role, content: msg.content }));
+      
+      const apiResponse = await sendToOpenRouter(messages, model);
+      
+      if (apiResponse.choices && apiResponse.choices.length > 0) {
+        const response = apiResponse.choices[0].message.content;
+        console.log('\nAssistente:');
+        console.log(response);
+        await db.addMessage('assistant', response);
+      } else if (apiResponse.error) {
+        console.error('\nErro da API:', apiResponse.error.message);
+      } else {
+        console.log('Não foi possível obter uma resposta da IA.');
+      }
+    } catch (error: any) {
+      console.error(`Erro: ${error.message}`);
+    }
+  }
   
   let isRunning = true;
   while (isRunning) {
-    const question = await askQuestion();
+    const question = await new Promise<string>((resolve) => {
+      rl.question('\nSua pergunta (ou "sair" para encerrar): ', (answer) => {
+        resolve(answer);
+      });
+    });
     
     if (question.toLowerCase() === 'sair') {
       isRunning = false;
@@ -80,8 +102,7 @@ const runInteractiveMode = async (model: string) => {
         console.log(response);
         await db.addMessage('assistant', response);
       } else if (apiResponse.error) {
-        console.error('\nErro da API:');
-        console.error(apiResponse.error.message);
+        console.error('\nErro da API:', apiResponse.error.message);
       } else {
         console.log('Não foi possível obter uma resposta da IA.');
       }
@@ -110,8 +131,7 @@ const runSinglePromptMode = async (filePaths: string[], prompt: string, model: s
       console.log('\nResposta da IA:');
       console.log(apiResponse.choices[0].message.content);
     } else if (apiResponse.error) {
-      console.error('\nErro da API:');
-      console.error(apiResponse.error.message);
+      console.error('\nErro da API:', apiResponse.error.message);
     } else {
       console.log('Não foi possível obter uma resposta da IA.');
     }
@@ -128,7 +148,11 @@ const main = async () => {
     const parsedArgs = parseCommandLineArgs(args);
     
     if (parsedArgs.interactive) {
-      await runInteractiveMode(parsedArgs.model || DEFAULT_MODEL);
+      if (parsedArgs.filePaths && parsedArgs.prompt) {
+        await runInteractiveMode(parsedArgs.model, parsedArgs.filePaths, parsedArgs.prompt);
+      } else {
+        await runInteractiveMode(parsedArgs.model);
+      }
     } else {
       validateArgs(parsedArgs);
       await runSinglePromptMode(parsedArgs.filePaths!, parsedArgs.prompt!, parsedArgs.model);
