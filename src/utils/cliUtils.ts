@@ -1,3 +1,6 @@
+import chalk from 'chalk';
+import { printCommandHelp, printAppTitle, printSeparator } from '../styles/prettierLogs';
+
 export interface CommandLineArgs {
   filePaths?: string[];
   prompt?: string;
@@ -102,17 +105,24 @@ export const validateArgs = (args: CommandLineArgs) => {
 };
 
 export const printUsage = () => {
-  console.log(`Uso: codewhisper [opções]`);
-  console.log(`Opções:`);
-  console.log(`  -F, --file-path <arquivo>   Especifica um arquivo para análise (pode ser usado múltiplas vezes)`);
-  console.log(`  -P, --prompt "<prompt>"     Pergunta ou instrução para o assistente`);
-  console.log(`  -M, --model <modelo>        Modelo de IA a ser usado (default: ${DEFAULT_MODEL})`);
-  console.log(`  -I, --interactive           Ativa o modo interativo de chat`);
-  console.log(`  -A, --auto-discover         Descobre automaticamente arquivos relevantes com base no prompt`);
-  console.log(`  --max-files <número>        Número máximo de arquivos para descoberta automática (default: ${DEFAULT_MAX_FILES})`);
-  console.log(`  --path <caminho>            Diretório base para busca de arquivos (default: diretório atual)`);
-  console.log(`\nExemplos:`);
-  console.log(`  codewhisper -F src/app.js -P "Como otimizar este código?"`);
-  console.log(`  codewhisper -A -P "Como implementar autenticação?" --max-files 8`);
-  console.log(`  codewhisper -I -M anthropic/claude-3-haiku`);
+  printAppTitle();
+  console.log(chalk.white.bold('\nUso:'));
+  console.log(chalk.cyan('  codewhisper [opções]\n'));
+  
+  console.log(chalk.white.bold('Opções:'));
+  printCommandHelp('-F, --file-path <arquivo>', 'Especifica um arquivo para análise (pode ser usado múltiplas vezes)');
+  printCommandHelp('-P, --prompt "<prompt>"', 'Pergunta ou instrução para o assistente');
+  printCommandHelp('-M, --model <modelo>', `Modelo de IA a ser usado (default: ${DEFAULT_MODEL})`);
+  printCommandHelp('-I, --interactive', 'Ativa o modo interativo de chat');
+  printCommandHelp('-A, --auto-discover', 'Descobre automaticamente arquivos relevantes com base no prompt');
+  printCommandHelp('--max-files <número>', `Número máximo de arquivos para descoberta automática (default: ${DEFAULT_MAX_FILES})`);
+  printCommandHelp('--path <caminho>', 'Diretório base para busca de arquivos (default: diretório atual)');
+  printCommandHelp('-H, --help', 'Exibe esta ajuda');
+  
+  console.log(chalk.white.bold('\nExemplos:'));
+  console.log(chalk.gray('  $ ') + chalk.cyan('codewhisper -F src/app.js -P "Como otimizar este código?"'));
+  console.log(chalk.gray('  $ ') + chalk.cyan('codewhisper -A -P "Como implementar autenticação?" --max-files 8'));
+  console.log(chalk.gray('  $ ') + chalk.cyan('codewhisper -I -M anthropic/claude-3-haiku'));
+  
+  printSeparator();
 };
