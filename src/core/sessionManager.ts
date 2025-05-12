@@ -1,4 +1,3 @@
-import { createSpinner } from '../styles/prettierLogs';
 import { Message } from '../services/apiService';
 import { DatabaseService } from '../services/dbService';
 
@@ -16,10 +15,9 @@ export class SessionManager {
       this.dbService = new DatabaseService();
     }
     
-    const initSpinner = createSpinner('Inicializando sessão');
-    initSpinner.start();
+    console.log('Inicializando sessão');
     await this.dbService.initialize();
-    initSpinner.succeed('Sessão inicializada com sucesso');
+    console.log('Sessão inicializada com sucesso');
     
     await this.dbService.addMessage(
       'system', 
@@ -55,11 +53,10 @@ export class SessionManager {
   async close(): Promise<void> {
     if (this.closed) return;
     
-    const closeSpinner = createSpinner('Encerrando sessão');
-    closeSpinner.start();
+    console.log('Encerrando sessão');
     await this.dbService.close();
     this.closed = true;
-    closeSpinner.succeed('Sessão encerrada');
+    console.log('Sessão encerrada');
   }
   
   getSessionId(): string {

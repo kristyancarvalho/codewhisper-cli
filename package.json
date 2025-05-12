@@ -17,7 +17,7 @@
     "ai",
     "openrouter"
   ],
-  "author": "Seu Nome",
+  "author": "Kristyan Carvalho",
   "license": "ISC",
   "dependencies": {
     "@types/node": "^22.15.17",

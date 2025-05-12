@@ -1,6 +1,5 @@
 import { ConversationDB } from '../utils/dbUtils';
 import { v4 as uuidv4 } from 'uuid';
-import { createSpinner } from '../styles/prettierLogs';
 
 export interface ConversationMessage {
   role: 'system' | 'user' | 'assistant';
@@ -18,12 +17,9 @@ export class DatabaseService {
   }
   
   async initialize(): Promise<void> {
-    const spinner = createSpinner('Inicializando banco de dados');
-    spinner.start();
-    
+    console.log('Inicializando banco de dados');
     await this.db.initialize();
-    
-    spinner.succeed('Banco de dados inicializado com sucesso');
+    console.log('Banco de dados inicializado com sucesso');
   }
   
   async addMessage(role: 'system' | 'user' | 'assistant', content: string): Promise<void> {
@@ -35,12 +31,9 @@ export class DatabaseService {
   }
   
   async close(): Promise<void> {
-    const spinner = createSpinner('Fechando conexão com o banco de dados');
-    spinner.start();
-    
+    console.log('Fechando conexão com o banco de dados');
     await this.db.close();
-    
-    spinner.succeed('Conexão com o banco de dados fechada');
+    console.log('Conexão com o banco de dados fechada');
   }
   
   getSessionId(): string {

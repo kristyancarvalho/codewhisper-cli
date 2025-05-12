@@ -1,7 +1,6 @@
 import { SessionManager } from '../core/sessionManager';
 import { loadFiles, discoverAndLoadFiles } from '../services/fileService';
 import { sendMessageToAI } from '../services/apiService';
-import { formatUserMessage, formatAssistantMessage } from '../styles/prettierLogs';
 
 export const runSinglePromptMode = async (
   filePaths: string[] | undefined,
@@ -27,13 +26,13 @@ export const runSinglePromptMode = async (
   }
   
   await sessionManager.addUserMessage(prompt);
-  console.log(formatUserMessage(prompt));
+  console.log(`Você: ${prompt}`);
   
   const history = await sessionManager.getConversationHistory();
   const response = await sendMessageToAI(history, model);
   
   if (response) {
-    console.log(formatAssistantMessage(response));
+    console.log(`Assistente: ${response}`);
   }
   
   await sessionManager.close();

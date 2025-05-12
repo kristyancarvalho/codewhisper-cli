@@ -1,5 +1,4 @@
 import { readFileContent, findRelevantFiles } from '../utils/fileUtils';
-import { createSpinner, logError, logWarning, printFileList } from '../styles/prettierLogs';
 
 export const loadFiles = async (filePaths: string[]): Promise<string | null> => {
   if (filePaths.length === 0) {
@@ -7,13 +6,12 @@ export const loadFiles = async (filePaths: string[]): Promise<string | null> => 
   }
   
   try {
-    const loadSpinner = createSpinner('Carregando arquivos');
-    loadSpinner.start();
+    console.log('Carregando arquivos');
     const codeContext = await readFileContent(filePaths);
-    loadSpinner.succeed(`${filePaths.length} arquivo(s) carregado(s) com sucesso`);
+    console.log(`${filePaths.length} arquivo(s) carregado(s) com sucesso`);
     return codeContext;
   } catch (error: any) {
-    logError(`Erro ao carregar arquivos: ${error.message}`);
+    console.error(`Erro ao carregar arquivos: ${error.message}`);
     return null;
   }
 };
@@ -24,20 +22,20 @@ export const discoverFiles = async (
   maxFiles: number = 5
 ): Promise<string[]> => {
   try {
-    const discoverSpinner = createSpinner('Descobrindo arquivos relevantes para o prompt');
-    discoverSpinner.start();
+    console.log('Descobrindo arquivos relevantes para o prompt');
     const discoveredFiles = await findRelevantFiles(prompt, basePath, maxFiles);
     
     if (discoveredFiles.length > 0) {
-      discoverSpinner.succeed('Arquivos descobertos com sucesso');
-      printFileList(discoveredFiles, 'Arquivos encontrados');
+      console.log('Arquivos descobertos com sucesso');
+      console.log('Arquivos encontrados:');
+      discoveredFiles.forEach(file => console.log(`- ${file}`));
       return discoveredFiles;
     } else {
-      discoverSpinner.fail('Nenhum arquivo relevante encontrado');
+      console.log('Nenhum arquivo relevante encontrado');
       return [];
     }
   } catch (error: any) {
-    logWarning(`Falha na descoberta automática: ${error.message}`);
+    console.warn(`Falha na descoberta automática: ${error.message}`);
     return [];
   }
 };
