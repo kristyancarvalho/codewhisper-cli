@@ -3,46 +3,6 @@ import boxen from 'boxen';
 import ora from 'ora';
 import figlet from 'figlet';
 
-export const createSpinner = (text: string) => {
-  return ora({
-    text,
-    spinner: 'dots',
-    color: 'cyan'
-  });
-};
-
-export const logError = (message: string) => {
-  console.error(boxen(chalk.red.bold(message), {
-    padding: 1,
-    borderColor: 'red',
-    borderStyle: 'round'
-  }));
-};
-
-export const logWarning = (message: string) => {
-  console.warn(boxen(chalk.yellow(message), {
-    padding: 1,
-    borderColor: 'yellow',
-    borderStyle: 'round'
-  }));
-};
-
-export const logSuccess = (message: string) => {
-  console.log(boxen(chalk.green(message), {
-    padding: 1,
-    borderColor: 'green',
-    borderStyle: 'round'
-  }));
-};
-
-export const logInfo = (message: string) => {
-  console.log(boxen(chalk.blue(message), {
-    padding: 1,
-    borderColor: 'blue',
-    borderStyle: 'round'
-  }));
-};
-
 export const printAppTitle = () => {
   console.log('\n\n' + chalk.yellowBright(
         figlet.textSync('CodeWhisper', {
@@ -54,51 +14,80 @@ export const printAppTitle = () => {
   console.log(chalk.cyan('Seu assistente de código inteligente!') + '\n');
 };
 
-export const formatAssistantMessage = (message: string) => {
-  return boxen(chalk.cyan(message), {
+export const printError = (message: string) => {
+  console.log(boxen(chalk.redBright(`✖ ERRO: ${message}`), {
     padding: 1,
-    margin: { top: 1, bottom: 1 },
-    borderColor: 'cyan',
+    margin: 1,
     borderStyle: 'round',
-    title: chalk.white.bold('Assistente'),
-    titleAlignment: 'center'
+    borderColor: 'red'
+  }));
+};
+
+export const printSuccess = (message: string) => {
+  console.log(boxen(chalk.greenBright(`✓ SUCESSO: ${message}`), {
+    padding: 1,
+    margin: 1,
+    borderStyle: 'round',
+    borderColor: 'green'
+  }));
+};
+
+export const printWarning = (message: string) => {
+  console.log(boxen(chalk.yellowBright(`⚠ AVISO: ${message}`), {
+    padding: 1,
+    margin: 1,
+    borderStyle: 'round',
+    borderColor: 'yellow'
+  }));
+};
+
+export const printInfo = (message: string) => {
+  console.log(boxen(chalk.blueBright(`ℹ INFO: ${message}`), {
+    padding: 1,
+    margin: 1,
+    borderStyle: 'round',
+    borderColor: 'blue'
+  }));
+};
+
+export const createSpinner = (text: string) => {
+  return ora({
+    text,
+    color: 'cyan',
+    spinner: 'dots'
   });
 };
 
-export const formatUserMessage = (message: string) => {
-  return boxen(chalk.white(message), {
-    padding: 1,
-    margin: { top: 1, bottom: 1 },
-    borderColor: 'white',
-    borderStyle: 'round',
-    title: chalk.white.bold('Você'),
-    titleAlignment: 'center'
-  });
-};
-
-export const formatCodeBlock = (code: string, language: string = '') => {
-  return boxen(chalk.yellowBright(code), {
-    padding: 1,
-    margin: { top: 1, bottom: 1 },
-    borderColor: 'yellow',
-    borderStyle: 'round',
-    title: language ? chalk.yellow.bold(language) : undefined,
-    titleAlignment: 'center'
-  });
-};
-
-export const printFileList = (files: string[], title: string) => {
-  console.log(chalk.cyan.bold(`\n${title}:`));
-  files.forEach((file, index) => {
-    console.log(`  ${chalk.green(index + 1)}. ${chalk.white(file)}`);
+export const printCommandList = (commands: {name: string, description: string}[]) => {
+  console.log(chalk.cyanBright('\n📋 COMANDOS DISPONÍVEIS:'));
+  
+  const maxLength = Math.max(...commands.map(cmd => cmd.name.length));
+  
+  commands.forEach(cmd => {
+    console.log(`  ${chalk.greenBright(cmd.name.padEnd(maxLength + 2))} ${cmd.description}`);
   });
   console.log('');
 };
 
-export const printCommandHelp = (command: string, description: string) => {
-  console.log(`  ${chalk.green(command.padEnd(25))} ${chalk.white(description)}`);
+export const printFileAdded = (filePath: string) => {
+  console.log(
+    chalk.green('📄 ') + 
+    chalk.white('Arquivo adicionado: ') + 
+    chalk.yellowBright(filePath)
+  );
+};
+
+export const printFilesDiscovered = (files: string[]) => {
+  console.log(chalk.cyanBright('🔍 Arquivos descobertos:'));
+  files.forEach((file, index) => {
+    console.log(`  ${chalk.green(index + 1)}. ${chalk.yellowBright(file)}`);
+  });
+};
+
+export const printPrompt = () => {
+  return chalk.greenBright('\n➤ ');
 };
 
 export const printSeparator = () => {
-  console.log(chalk.gray('─'.repeat(process.stdout.columns || 80)));
+  console.log(chalk.gray('\n----------------------------------------\n'));
 };

@@ -1,3 +1,9 @@
+import { 
+  printAppTitle,
+  printSeparator 
+} from "../styles/prettierLogs";
+import chalk from 'chalk';
+
 export interface CommandLineArgs {
   filePaths?: string[];
   prompt?: string;
@@ -102,24 +108,33 @@ export const validateArgs = (args: CommandLineArgs) => {
 };
 
 export const printUsage = () => {
-  console.log('CodeWhisper CLI');
-  console.log('\nUso:');
-  console.log('  codewhisper [opções]\n');
+  printAppTitle();
+  console.log('\n' + chalk.cyanBright('USO:'));
+  console.log('  ' + chalk.greenBright('codewhisper') + ' ' + chalk.yellowBright('[opções]') + '\n');
   
-  console.log('Opções:');
-  console.log('  -F, --file-path <arquivo>      Especifica um arquivo para análise (pode ser usado múltiplas vezes)');
-  console.log('  -P, --prompt "<prompt>"        Pergunta ou instrução para o assistente');
-  console.log(`  -M, --model <modelo>           Modelo de IA a ser usado (default: ${DEFAULT_MODEL})`);
-  console.log('  -I, --interactive              Ativa o modo interativo de chat');
-  console.log('  -A, --auto-discover            Descobre automaticamente arquivos relevantes com base no prompt');
-  console.log(`  --max-files <número>           Número máximo de arquivos para descoberta automática (default: ${DEFAULT_MAX_FILES})`);
-  console.log('  --path <caminho>               Diretório base para busca de arquivos (default: diretório atual)');
-  console.log('  -H, --help                     Exibe esta ajuda');
+  console.log(chalk.cyanBright('OPÇÕES:'));
   
-  console.log('\nExemplos:');
-  console.log('  $ codewhisper -F src/app.js -P "Como otimizar este código?"');
-  console.log('  $ codewhisper -A -P "Como implementar autenticação?" --max-files 8');
-  console.log('  $ codewhisper -I -M anthropic/claude-3-haiku');
+  const options = [
+    { flag: '-F, --file-path <arquivo>', desc: 'Especifica um arquivo para análise (pode ser usado múltiplas vezes)' },
+    { flag: '-P, --prompt "<prompt>"', desc: 'Pergunta ou instrução para o assistente' },
+    { flag: '-M, --model <modelo>', desc: `Modelo de IA a ser usado (default: ${DEFAULT_MODEL})` },
+    { flag: '-I, --interactive', desc: 'Ativa o modo interativo de chat' },
+    { flag: '-A, --auto-discover', desc: 'Descobre automaticamente arquivos relevantes com base no prompt' },
+    { flag: `--max-files <número>`, desc: `Número máximo de arquivos para descoberta automática (default: ${DEFAULT_MAX_FILES})` },
+    { flag: '--path <caminho>', desc: 'Diretório base para busca de arquivos (default: diretório atual)' },
+    { flag: '-H, --help', desc: 'Exibe esta ajuda' }
+  ];
   
-  console.log('----------------------------------------');
+  const maxFlagLength = Math.max(...options.map(opt => opt.flag.length));
+  
+  options.forEach(opt => {
+    console.log(`  ${chalk.greenBright(opt.flag.padEnd(maxFlagLength + 2))} ${opt.desc}`);
+  });
+  
+  console.log('\n' + chalk.cyanBright('EXEMPLOS:'));
+  console.log('  $ ' + chalk.greenBright('codewhisper') + ' ' + chalk.yellowBright('-F src/app.js -P "Como otimizar este código?"'));
+  console.log('  $ ' + chalk.greenBright('codewhisper') + ' ' + chalk.yellowBright('-A -P "Como implementar autenticação?" --max-files 8'));
+  console.log('  $ ' + chalk.greenBright('codewhisper') + ' ' + chalk.yellowBright('-I -M anthropic/claude-3-haiku'));
+  
+  printSeparator();
 };

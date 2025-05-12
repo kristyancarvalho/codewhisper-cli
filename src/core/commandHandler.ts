@@ -1,5 +1,14 @@
 import { SessionManager } from './sessionManager';
 import { loadFiles, discoverFiles } from '../services/fileService';
+import { 
+  printError, 
+  printSuccess, 
+  printWarning, 
+  printInfo, 
+  printCommandList,
+  printFileAdded,
+  printFilesDiscovered,
+} from '../styles/prettierLogs';
 
 export interface CommandResult {
   shouldContinue: boolean;
@@ -17,65 +26,85 @@ export const handleSpecialCommand = async (
   }
   
   if (input.toLowerCase() === 'sair') {
-    console.log('Encerrando a aplicação...');
+    printInfo('Encerrando a aplicação...');
     return { shouldContinue: false };
   }
   
   if (input.startsWith('arquivo:')) {
     const filePath = input.substring(8).trim();
     if (!filePath) {
-      console.log('Por favor, forneça um caminho de arquivo após "arquivo:"');
+      printWarning('Por favor, forneça um caminho de arquivo após "arquivo:"');
       return { shouldContinue: true, skipMessageProcessing: true };
     }
     
     try {
+      printInfo(`Carregando arquivo "${filePath}"...`);
+      
       const fileContent = await loadFiles([filePath]);
+      
       if (fileContent) {
         await sessionManager.addSystemMessage(
           `Adicionando novo arquivo ao contexto:\n\`\`\`\n${fileContent}\n\`\`\``
         );
-        console.log(`Arquivo "${filePath}" adicionado com sucesso!`);
+        printFileAdded(filePath);
+        printSuccess('Arquivo adicionado com sucesso ao contexto!');
       } else {
-        console.log(`Não foi possível ler o conteúdo do arquivo "${filePath}"`);
+        printError(`Não foi possível ler o conteúdo do arquivo "${filePath}"`);
       }
     } catch (error: any) {
-      console.log(`Erro ao ler o arquivo: ${error.message}`);
+      printError(`Erro ao ler o arquivo: ${error.message}`);
     }
     return { shouldContinue: true, skipMessageProcessing: true };
   }
   
   if (input.startsWith('auto:')) {
     const autoPrompt = input.substring(5).trim();
-    if (autoPrompt) {
-      console.log(`Buscando arquivos relacionados a "${autoPrompt}"...`);
+    if (!autoPrompt) {
+      printWarning('Por favor, forneça um prompt para descoberta automática após "auto:"');
+      return { shouldContinue: true, skipMessageProcessing: true };
+    }
+    
+    try {
+      printInfo(`Buscando arquivos relacionados a "${autoPrompt}"...`);
+      
       const discoveredFiles = await discoverFiles(autoPrompt, basePath, maxFiles);
       
       if (discoveredFiles.length > 0) {
-        console.log(`Encontrados ${discoveredFiles.length} arquivos: ${discoveredFiles.join(', ')}`);
-        const fileContent = await loadFiles(discoveredFiles);
-        if (fileContent) {
-          await sessionManager.addSystemMessage(
-            `Adicionando arquivos descobertos ao contexto:\n\`\`\`\n${fileContent}\n\`\`\``
-          );
-          console.log('Arquivos adicionados com sucesso!');
+        printFilesDiscovered(discoveredFiles);
+        printInfo('Carregando conteúdo dos arquivos...');
+        
+        try {
+          const fileContent = await loadFiles(discoveredFiles);
+          if (fileContent) {
+            await sessionManager.addSystemMessage(
+              `Adicionando arquivos descobertos ao contexto:\n\`\`\`\n${fileContent}\n\`\`\``
+            );
+            printSuccess('Arquivos adicionados com sucesso ao contexto!');
+          } else {
+            printError('Falha ao carregar conteúdo dos arquivos');
+          }
+        } catch (loadError: any) {
+          printError(`Erro ao carregar arquivos: ${loadError.message}`);
         }
       } else {
-        console.log(`Nenhum arquivo encontrado para o prompt "${autoPrompt}"`);
+        printWarning(`Nenhum arquivo encontrado para o prompt "${autoPrompt}"`);
       }
-    } else {
-      console.log('Por favor, forneça um prompt para descoberta automática após "auto:"');
+    } catch (searchError: any) {
+      printError(`Erro ao buscar arquivos: ${searchError.message}`);
     }
+    
     return { shouldContinue: true, skipMessageProcessing: true };
   }
   
   if (input.toLowerCase() === 'ajuda' || input.toLowerCase() === 'help') {
-    console.log(`
-      Comandos disponíveis:
-      - "sair" - Encerra a aplicação
-      - "arquivo:caminho" - Adiciona um arquivo ao contexto
-      - "auto:prompt" - Descobre e adiciona arquivos relacionados ao prompt
-      - "ajuda" ou "help" - Exibe esta mensagem de ajuda
-    `);
+    const commands = [
+      { name: 'sair', description: 'Encerra a aplicação' },
+      { name: 'arquivo:caminho', description: 'Adiciona um arquivo ao contexto' },
+      { name: 'auto:prompt', description: 'Descobre e adiciona arquivos relacionados ao prompt' },
+      { name: 'ajuda/help', description: 'Exibe esta mensagem de ajuda' }
+    ];
+    
+    printCommandList(commands);
     return { shouldContinue: true, skipMessageProcessing: true };
   }
   
