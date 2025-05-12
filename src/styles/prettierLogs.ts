@@ -8,16 +8,20 @@ const titleGradient = gradient(['#36D7B7', '#3498DB', '#9B59B6']);
 
 export const printAppTitle = () => {
   console.log('\n');
-  
+
   const title = figlet.textSync('CodeWhisper', {
     font: 'ANSI Shadow',
     horizontalLayout: 'full'
   });
-  
+
   console.log(titleGradient(title));
-  
+
+  const titleLines = title.split('\n');
+  const titleWidth = Math.max(...titleLines.map(line => line.length));
   const tagline = 'Seu assistente de código inteligente!';
-  console.log(`${' '.repeat(Math.floor((process.stdout.columns - tagline.length) / 2))}${chalk.cyan(tagline)}\n`);
+  const padding = Math.floor((titleWidth - tagline.length) / 2);
+
+  console.log(`${' '.repeat(padding)}${chalk.cyan(tagline)}\n`);
 };
 
 export const printError = (message: string) => {
