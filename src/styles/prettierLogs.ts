@@ -58,7 +58,8 @@ export const printInfo = (message: string) => {
     padding: 1,
     margin: 1,
     borderStyle: 'round',
-    borderColor: 'blue'
+    borderColor: 'cyan',
+    textAlignment: 'center'
   }));
 };
 
@@ -93,7 +94,7 @@ export const printFilesDiscovered = (files: string[]) => {
     ).join('\n'),
     {
       padding: 1,
-      margin: { top: 1, bottom: 1 },
+      margin: 1,
       borderStyle: 'round',
       borderColor: 'blue'
     }

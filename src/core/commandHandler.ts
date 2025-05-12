@@ -9,6 +9,7 @@ import {
   printFileAdded,
   printFilesDiscovered,
 } from '../styles/prettierLogs';
+import chalk from 'chalk';
 
 export interface CommandResult {
   shouldContinue: boolean;
@@ -26,7 +27,6 @@ export const handleSpecialCommand = async (
   }
   
   if (input.toLowerCase() === 'sair') {
-    printInfo('Encerrando a aplicação...');
     return { shouldContinue: false };
   }
   
@@ -38,7 +38,7 @@ export const handleSpecialCommand = async (
     }
     
     try {
-      printInfo(`Carregando arquivo "${filePath}"...`);
+      console.log(chalk.cyan(`Carregando arquivo "${filePath}"...`));
       
       const fileContent = await loadFiles([filePath]);
       
@@ -65,13 +65,13 @@ export const handleSpecialCommand = async (
     }
     
     try {
-      printInfo(`Buscando arquivos relacionados a "${autoPrompt}"...`);
+      console.log(chalk.cyan(`Buscando arquivos relacionados a "${autoPrompt}"...`));
       
       const discoveredFiles = await discoverFiles(autoPrompt, basePath, maxFiles);
       
       if (discoveredFiles.length > 0) {
         printFilesDiscovered(discoveredFiles);
-        printInfo('Carregando conteúdo dos arquivos...');
+        console.log(chalk.cyan('Carregando conteúdo dos arquivos...'));
         
         try {
           const fileContent = await loadFiles(discoveredFiles);
