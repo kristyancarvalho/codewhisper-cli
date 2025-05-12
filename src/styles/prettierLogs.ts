@@ -2,16 +2,22 @@ import chalk from 'chalk';
 import boxen from 'boxen';
 import ora from 'ora';
 import figlet from 'figlet';
+import gradient from 'gradient-string';
+
+const titleGradient = gradient(['#36D7B7', '#3498DB', '#9B59B6']);
 
 export const printAppTitle = () => {
-  console.log('\n\n' + chalk.yellowBright(
-        figlet.textSync('CodeWhisper', {
-            font: 'ANSI Shadow',
-            horizontalLayout: 'full'
-        })
-    )
-  );
-  console.log(chalk.cyan('Seu assistente de código inteligente!') + '\n');
+  console.log('\n');
+  
+  const title = figlet.textSync('CodeWhisper', {
+    font: 'ANSI Shadow',
+    horizontalLayout: 'full'
+  });
+  
+  console.log(titleGradient(title));
+  
+  const tagline = 'Seu assistente de código inteligente!';
+  console.log(`${' '.repeat(Math.floor((process.stdout.columns - tagline.length) / 2))}${chalk.cyan(tagline)}\n`);
 };
 
 export const printError = (message: string) => {
