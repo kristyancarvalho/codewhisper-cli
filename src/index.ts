@@ -1,7 +1,7 @@
 import { parseCommandLineArgs, validateArgs, printUsage } from './utils/cliUtils';
 import { runInteractiveMode } from './modes/interactiveMode';
 import { runSinglePromptMode } from './modes/singlePromptMode';
-import { printError } from './styles/prettierLogs';
+import { printError, printAppTitle } from './styles/prettierLogs';
 
 const main = async () => {
   try {
@@ -24,7 +24,7 @@ const main = async () => {
         parsedArgs.filePaths, 
         parsedArgs.prompt!, 
         parsedArgs.model,
-        parsedArgs.autoDiscover || false,
+        parsedArgs.autoDiscover,
         parsedArgs.maxFiles,
         parsedArgs.basePath
       );

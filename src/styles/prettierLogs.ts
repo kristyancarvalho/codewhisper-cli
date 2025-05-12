@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import boxen from 'boxen';
-import ora from 'ora';
 import figlet from 'figlet';
 import gradient from 'gradient-string';
 
 const titleGradient = gradient(['#36D7B7', '#3498DB', '#9B59B6']);
+const codeGradient = gradient(['#3498DB', '#2980B9', '#1F618D']);
 
 export const printAppTitle = () => {
   console.log('\n');
@@ -62,23 +62,19 @@ export const printInfo = (message: string) => {
   }));
 };
 
-export const createSpinner = (text: string) => {
-  return ora({
-    text,
-    color: 'cyan',
-    spinner: 'dots'
-  });
-};
-
 export const printCommandList = (commands: {name: string, description: string}[]) => {
-  console.log(chalk.cyanBright('\n📋 COMANDOS DISPONÍVEIS:'));
-  
-  const maxLength = Math.max(...commands.map(cmd => cmd.name.length));
-  
-  commands.forEach(cmd => {
-    console.log(`  ${chalk.greenBright(cmd.name.padEnd(maxLength + 2))} ${cmd.description}`);
-  });
-  console.log('');
+  console.log(boxen(
+    chalk.cyanBright('📋 COMANDOS DISPONÍVEIS:\n\n') +
+    commands.map(cmd => 
+      `  ${chalk.greenBright(cmd.name.padEnd(15))} ${cmd.description}`
+    ).join('\n'),
+    {
+      padding: 1,
+      margin: { top: 1, bottom: 1 },
+      borderStyle: 'round',
+      borderColor: 'cyan'
+    }
+  ));
 };
 
 export const printFileAdded = (filePath: string) => {
@@ -90,16 +86,69 @@ export const printFileAdded = (filePath: string) => {
 };
 
 export const printFilesDiscovered = (files: string[]) => {
-  console.log(chalk.cyanBright('🔍 Arquivos descobertos:'));
-  files.forEach((file, index) => {
-    console.log(`  ${chalk.green(index + 1)}. ${chalk.yellowBright(file)}`);
-  });
+  console.log(boxen(
+    chalk.cyanBright('🔍 ARQUIVOS DESCOBERTOS:\n\n') +
+    files.map((file, index) => 
+      `  ${chalk.green((index + 1).toString().padEnd(3))} ${chalk.yellowBright(file)}`
+    ).join('\n'),
+    {
+      padding: 1,
+      margin: { top: 1, bottom: 1 },
+      borderStyle: 'round',
+      borderColor: 'blue'
+    }
+  ));
 };
 
-export const printPrompt = () => {
-  return chalk.greenBright('\n➤ ');
+export const printUserMessage = (message: string) => {
+  console.log(chalk.green('\n💬 Você: ') + message);
+};
+
+export const printAssistantMessage = (message: string) => {
+  const formattedMessage = message.replace(/```([^`]+)```/g, (match, code) => {
+    return '\n' + boxen(codeGradient(code), {
+      padding: 1,
+      borderStyle: 'round',
+      borderColor: 'yellow'
+    }) + '\n';
+  });
+  
+  console.log(chalk.blue('\n🤖 Assistente: ') + formattedMessage);
+};
+
+export const printDebug = (message: string) => {
+  console.log(chalk.grey(`[DEBUG] ${message}`));
 };
 
 export const printSeparator = () => {
-  console.log(chalk.gray('\n----------------------------------------\n'));
+  console.log(chalk.gray('\n' + '─'.repeat(50) + '\n'));
+};
+
+export const printCodeContext = (fileCount: number) => {
+  printSuccess(`${fileCount} arquivo(s) carregado(s) como contexto`);
+};
+
+export const printWaitingInput = () => {
+  console.log(chalk.cyan('\nAguardando sua pergunta...'));
+};
+
+export const printModelInfo = (model: string) => {
+  console.log(chalk.grey(`\nModelo em uso: ${chalk.white(model)}`));
+};
+
+export const printThinking = () => {
+  console.log(chalk.cyan('\n⏳ Pensando...\n'));
+};
+
+export const printExitMessage = () => {
+  console.log(boxen(
+    gradient(['#5A4FCF', '#3498DB'])('👋 Sessão encerrada!\nAté a próxima!'),
+    {
+      padding: 1,
+      margin: 1,
+      borderStyle: 'round',
+      borderColor: 'cyan',
+      textAlignment: 'center'
+    }
+  ));
 };

@@ -15,9 +15,7 @@ export class SessionManager {
       this.dbService = new DatabaseService();
     }
     
-    console.log('Inicializando sessão');
     await this.dbService.initialize();
-    console.log('Sessão inicializada com sucesso');
     
     await this.dbService.addMessage(
       'system', 
@@ -53,10 +51,8 @@ export class SessionManager {
   async close(): Promise<void> {
     if (this.closed) return;
     
-    console.log('Encerrando sessão');
     await this.dbService.close();
     this.closed = true;
-    console.log('Sessão encerrada');
   }
   
   getSessionId(): string {
