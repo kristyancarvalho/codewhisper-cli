@@ -19,9 +19,11 @@ export const printAppTitle = () => {
   const titleLines = title.split('\n');
   const titleWidth = Math.max(...titleLines.map(line => line.length));
   const tagline = 'Seu assistente de código inteligente!';
+  const credits = 'github: kristyancarvalho'
   const padding = Math.floor((titleWidth - tagline.length) / 2);
 
   console.log(`${' '.repeat(padding)}${chalk.cyan(tagline)}\n`);
+  console.log(`${' '.repeat(padding)}${chalk.grey(credits)}\n`);
 };
 
 export const printError = (message: string) => {

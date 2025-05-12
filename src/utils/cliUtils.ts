@@ -135,6 +135,5 @@ export const printUsage = () => {
   console.log('  $ ' + chalk.greenBright('codewhisper') + ' ' + chalk.yellowBright('-F src/app.js -P "Como otimizar este código?"'));
   console.log('  $ ' + chalk.greenBright('codewhisper') + ' ' + chalk.yellowBright('-A -P "Como implementar autenticação?" --max-files 8'));
   console.log('  $ ' + chalk.greenBright('codewhisper') + ' ' + chalk.yellowBright('-I -M anthropic/claude-3-haiku'));
-  
-  printSeparator();
+  console.log('\n');
 };
