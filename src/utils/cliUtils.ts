@@ -1,6 +1,5 @@
 import { 
   printAppTitle,
-  printSeparator 
 } from "../styles/prettierLogs";
 import chalk from 'chalk';
 

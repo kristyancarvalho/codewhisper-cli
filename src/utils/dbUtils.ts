@@ -1,5 +1,7 @@
 import sqlite3 from 'sqlite3';
 import { open, Database } from 'sqlite';
+import fs from 'fs';
+import path from 'path';
 
 interface Message {
   role: 'system' | 'user' | 'assistant';
@@ -10,14 +12,22 @@ interface Message {
 export class ConversationDB {
   private db: Database | null = null;
   private sessionId: string;
+  private readonly dbDir = './db';
+  private readonly dbPath: string;
 
   constructor(sessionId: string) {
     this.sessionId = sessionId;
+    this.dbPath = path.join(this.dbDir, 'conversations.db');
   }
 
   async initialize(): Promise<void> {
+    // Ensure the db directory exists
+    if (!fs.existsSync(this.dbDir)) {
+      fs.mkdirSync(this.dbDir, { recursive: true });
+    }
+
     this.db = await open({
-      filename: './conversations.db',
+      filename: this.dbPath,
       driver: sqlite3.Database
     });
 

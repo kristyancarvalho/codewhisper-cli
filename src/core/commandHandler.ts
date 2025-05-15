@@ -4,7 +4,6 @@ import {
   printError, 
   printSuccess, 
   printWarning, 
-  printInfo, 
   printCommandList,
   printFileAdded,
   printFilesDiscovered,

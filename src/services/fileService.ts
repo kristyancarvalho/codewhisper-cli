@@ -1,5 +1,4 @@
 import { readFileContent, findRelevantFiles } from '../utils/fileUtils';
-import { printInfo } from '../styles/prettierLogs';
 
 export const loadFiles = async (filePaths: string[]): Promise<string | null> => {
   if (filePaths.length === 0) {
