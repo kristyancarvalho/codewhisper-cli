@@ -21,7 +21,6 @@ export class ConversationDB {
   }
 
   async initialize(): Promise<void> {
-    // Ensure the db directory exists
     if (!fs.existsSync(this.dbDir)) {
       fs.mkdirSync(this.dbDir, { recursive: true });
     }
